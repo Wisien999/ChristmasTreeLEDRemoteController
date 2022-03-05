@@ -1,0 +1,23 @@
+.center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.btn {
+    min-height: 20px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+#status-container {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px black solid;
+}
+
+#power-status {
+    font-weight: bold;
+}
