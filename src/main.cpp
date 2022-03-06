@@ -1,89 +1,30 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 #include "ESP8266WiFi.h"
-#include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
 #include "config.h"
 #include "credentials.h"
-
+#include "Controller.h"
+#include "RESTHandlers.h"
 
 
 AsyncWebServer server(80);
-bool poweredOn = false;
-
-void powerOff() {
-    digitalWrite(RELAY_PIN, POWER_OFF);
-    digitalWrite(LED_BUILTIN, POWER_OFF);
-    poweredOn = false;
-}
-
-void powerOn() {
-    digitalWrite(RELAY_PIN, POWER_ON);
-    digitalWrite(LED_BUILTIN, POWER_ON);
-    poweredOn = true;
-}
-
-void changeMode() {
-    digitalWrite(SWITCH_BUTTON_PIN, HIGH);
-    delay(100);
-    digitalWrite(SWITCH_BUTTON_PIN, LOW);
-}
-
-void handleControl(AsyncWebServerRequest *request) {
-    if (request->hasArg("power"))
-    {
-        uint8_t val = request->arg("power").toInt();
-        Serial.println(val);
-        if (val == 0) { powerOff(); }
-        else { powerOn(); }
-    }
-    else if (request->hasArg("changeMode"))
-    {
-        changeMode();
-    }
-
-    request->send(200);
-}
-
-void handleSetPowerState(AsyncWebServerRequest *request) {
-    if (!request->hasArg(SET_POWER_STATE_ARG_NAME)) {
-        request->send(400);
-        return;
-    }
-
-    if (request->arg(SET_POWER_STATE_ARG_NAME).toInt() == 0) { powerOff(); }
-    else { powerOn(); }
-
-    request->send(200);
-}
-
-void handleChangeMode(AsyncWebServerRequest *request) {
-    changeMode();
-    request->send(200);
-}
 
 
 String processor(const String &var) {
     Serial.println(var);
-    if (var == "POWER-STATE") {
-        return poweredOn ? "ON" : "OFF";
+    if (var == POWER_STATE_INFO_VAR_NAME) {
+        return Controller::isPoweredOn() ? "ON" : "OFF";
     }
-    else if (var == "SET-POWER-VALUE") {
-        if (poweredOn) {
-            return {"0"};
-        }
-        else {
-            return {"1"};
-        }
+    else if (var == TURN_Off_ON_BUTTON_VALUE_VAR_NAME) {
+        return Controller::isPoweredOn() ? String("0") : String("1");
     }
-    else if (var == "SET-POWER-STRING") {
-        if (poweredOn) {
-            return {"Turn off"};
-        }
-        else {
-            return {"Turn on"};
-        }
+    else if (var == TURN_OFF_ON_BUTTON_TEXT_VAR_NAME) {
+        return Controller::isPoweredOn() ? String("Turn off") : String("Turn on");
+    }
+    else if (var == CONTROL_URL_VAR_NAME) {
+        return {GENERAL_CONTROL_URL};
     }
 
     return {};
@@ -111,6 +52,10 @@ String processor(const String &var) {
         return;
     }
 
+    // ensure the power is off by default
+    Controller::powerOff();
+
+    // Set endpoints
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/index.html", "text/html", false, processor);
     });
@@ -120,13 +65,15 @@ String processor(const String &var) {
     server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/script.js", "application/javascript");
     });
-    server.on("/control", HTTP_GET, handleControl);
-    server.on(GET_POWER_STATE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
-            request->send(200, "text/plain", poweredOn ? GET_POWER_ON_RESPONSE : GET_POWER_OFF_RESPONSE);
+    server.on(GENERAL_CONTROL_URL, HTTP_GET, handleControl);
+    server.on(POWER_STATE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
+            request->send(200, "text/plain",
+                          Controller::isPoweredOn() ? GET_POWER_ON_RESPONSE : GET_POWER_OFF_RESPONSE);
     });
-    server.on(SET_POWER_STATE_URL, HTTP_PATCH, handleSetPowerState);
+    server.on(POWER_STATE_URL, HTTP_POST, handleSetPowerState);
     server.on(CHANGE_MODE_URL, HTTP_ANY, handleChangeMode);
 
+    // start the web server
     server.begin();
 
 
