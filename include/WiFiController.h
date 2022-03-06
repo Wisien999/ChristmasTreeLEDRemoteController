@@ -7,6 +7,8 @@ namespace WiFiController {
     void getWiFiSSIDFromEEPROM(char *ssid);
     void getWiFiPasswordFromEEPROM(char *password);
     void setWifiCredentials(String& ssid, String& password);
+    bool tryToConnectToWiFi();
+    void setUpConnection();
 }
 
 #endif //REMOTE_CHRISMAS_TREE_LEDS_WIFICONTROLLER_H

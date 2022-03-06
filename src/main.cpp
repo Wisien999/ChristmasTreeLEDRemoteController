@@ -47,31 +47,6 @@ String processor(const String &var) {
 }
 
 
-bool tryToConnectToWiFi() {
-    char saved_wifi_ssid[MAX_SSID_LENGTH + 1];
-    char saved_wifi_password[MAX_WIFI_PASSWORD_LENGTH + 1];
-
-    WiFiController::getWiFiSSIDFromEEPROM(saved_wifi_ssid);
-    WiFiController::getWiFiPasswordFromEEPROM(saved_wifi_password);
-
-    delay(1000);
-
-    // try to connect to Wi-Fi
-    WiFi.mode(WIFI_STA);
-    for (int i = 0; i < 3; ++i) {
-        WiFi.begin(saved_wifi_ssid, saved_wifi_password);
-
-        if (WiFi.waitForConnectResult() == WL_CONNECTED) {
-            return true;
-        }
-        else {
-            Serial.println("Error while connecting to WiFi!");
-        }
-        delay(3000);
-    }
-
-    return false;
-}
 
 [[maybe_unused]] void setup() {
     Serial.begin(9600);
@@ -90,11 +65,7 @@ bool tryToConnectToWiFi() {
     // ensure the power is off by default
     Controller::powerOff();
 
-    if (!tryToConnectToWiFi()) {
-        delay(100);
-        WiFi.mode(WIFI_AP);
-        WiFi.softAP("Christmas Tree LED Controller");
-    }
+    WiFiController::setUpConnection();
 
 
     // Set endpoints

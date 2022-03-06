@@ -1,3 +1,4 @@
+#include <ESP8266WiFi.h>
 #include "Arduino.h"
 #include "EEPROM.h"
 
@@ -48,5 +49,36 @@ void WiFiController::setWifiCredentials(String& ssid, String& password) {
     }
 
     EEPROM.commit();
-    EspClass::restart();
+    setUpConnection();
+}
+bool WiFiController::tryToConnectToWiFi() {
+    char saved_wifi_ssid[MAX_SSID_LENGTH + 1];
+    char saved_wifi_password[MAX_WIFI_PASSWORD_LENGTH + 1];
+
+    WiFiController::getWiFiSSIDFromEEPROM(saved_wifi_ssid);
+    WiFiController::getWiFiPasswordFromEEPROM(saved_wifi_password);
+
+    // try to connect to Wi-Fi
+    WiFi.mode(WIFI_STA);
+    for (int i = 0; i < 3; ++i) {
+        WiFi.begin(saved_wifi_ssid, saved_wifi_password);
+
+        if (WiFi.waitForConnectResult() == WL_CONNECTED) {
+            return true;
+        }
+        else {
+            Serial.println("Error while connecting to WiFi!");
+        }
+        delay(3000);
+    }
+
+    return false;
+}
+
+void WiFiController::setUpConnection() {
+    if (!WiFiController::tryToConnectToWiFi()) {
+        delay(100);
+        WiFi.mode(WIFI_AP);
+        WiFi.softAP("Christmas Tree LED Controller");
+    }
 }
