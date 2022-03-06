@@ -2,18 +2,19 @@
 #include <LittleFS.h>
 #include "ESP8266WiFi.h"
 #include <ESPAsyncWebServer.h>
+#include <EEPROM.h>
 
 #include "config.h"
-#include "credentials.h"
 #include "Controller.h"
 #include "RESTHandlers.h"
+#include "constants.h"
+#include "WiFiController.h"
 
 
 AsyncWebServer server(80);
 
 
 String processor(const String &var) {
-    Serial.println(var);
     if (var == POWER_STATE_INFO_VAR_NAME) {
         return Controller::isPoweredOn() ? "ON" : "OFF";
     }
@@ -26,15 +27,55 @@ String processor(const String &var) {
     else if (var == CONTROL_URL_VAR_NAME) {
         return {GENERAL_CONTROL_URL};
     }
+    else if (var == WIFI_CREDENTIALS_CONTROL_URL_VAR_NAME) {
+        return {WIFI_CREDENTIALS_CONTROL_URL};
+    }
+    else if (var == CONTROL_POWER_STATE_ARG_NAME_VAR ) {
+        return {CONTROL_POWER_STATE_ARG_NAME };
+    }
+    else if (var == CHANGE_MODE_ARG_NAME_VAR_NAME ) {
+        return {CHANGE_MODE_ARG_NAME };
+    }
+    else if (var == WIFI_SSID_ARG_VAR_NAME ) {
+        return {CONTROL_WIFI_SSID_ARG_NAME };
+    }
+    else if (var == WIFI_PASSWORD_ARG_VAR_NAME ) {
+        return {CONTROL_WIFI_PASSWORD_ARG_NAME};
+    }
 
     return {};
 }
 
 
+bool tryToConnectToWiFi() {
+    char saved_wifi_ssid[MAX_SSID_LENGTH + 1];
+    char saved_wifi_password[MAX_WIFI_PASSWORD_LENGTH + 1];
+
+    WiFiController::getWiFiSSIDFromEEPROM(saved_wifi_ssid);
+    WiFiController::getWiFiPasswordFromEEPROM(saved_wifi_password);
+
+    delay(1000);
+
+    // try to connect to Wi-Fi
+    WiFi.mode(WIFI_STA);
+    for (int i = 0; i < 3; ++i) {
+        WiFi.begin(saved_wifi_ssid, saved_wifi_password);
+
+        if (WiFi.waitForConnectResult() == WL_CONNECTED) {
+            return true;
+        }
+        else {
+            Serial.println("Error while connecting to WiFi!");
+        }
+        delay(3000);
+    }
+
+    return false;
+}
+
 [[maybe_unused]] void setup() {
     Serial.begin(9600);
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    EEPROM.begin(EEPROM_SIZE);
 
     if (!LittleFS.begin()) {
         Serial.println("Error while mounting filesystem!");
@@ -46,14 +87,15 @@ String processor(const String &var) {
     pinMode(SWITCH_BUTTON_PIN, OUTPUT);
     pinMode(LED_BUILTIN, OUTPUT);
 
-    if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        Serial.print("Error while connecting to WiFi!");
-        EspClass::restart();
-        return;
-    }
-
     // ensure the power is off by default
     Controller::powerOff();
+
+    if (!tryToConnectToWiFi()) {
+        delay(100);
+        WiFi.mode(WIFI_AP);
+        WiFi.softAP("Christmas Tree LED Controller");
+    }
+
 
     // Set endpoints
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -65,13 +107,18 @@ String processor(const String &var) {
     server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/script.js", "application/javascript");
     });
-    server.on(GENERAL_CONTROL_URL, HTTP_GET, handleControl);
+    server.on(WIFI_CREDENTIALS_PAGE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(LittleFS, "/wifi-credentials.html", "text/html", false, processor);
+    });
+
+    server.on(GENERAL_CONTROL_URL, HTTP_ANY, RESTHandlers::handleControl);
     server.on(POWER_STATE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
             request->send(200, "text/plain",
                           Controller::isPoweredOn() ? GET_POWER_ON_RESPONSE : GET_POWER_OFF_RESPONSE);
     });
-    server.on(POWER_STATE_URL, HTTP_POST, handleSetPowerState);
-    server.on(CHANGE_MODE_URL, HTTP_ANY, handleChangeMode);
+    server.on(POWER_STATE_URL, HTTP_POST, RESTHandlers::handleSetPowerState);
+    server.on(CHANGE_MODE_URL, HTTP_ANY, RESTHandlers::handleChangeMode);
+    server.on(WIFI_CREDENTIALS_CONTROL_URL, HTTP_POST, RESTHandlers::handleSetWifiCredentials);
 
     // start the web server
     server.begin();
