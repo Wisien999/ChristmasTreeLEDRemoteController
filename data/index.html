@@ -4,22 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
+<!--    <script src="script.js"></script>-->
 
     <title>Christmas Tree LED controller</title>
 
 </head>
-<body onload="init()">
+<body>
     <div class="center">
         <div id="status-container">
             <div id="power-status-container"><span>Power is </span><span id="power-status">%POWER-STATE%</span></div> 
         </div>
-        <div class="buttons-container">
-            <div id="powerbutton-container">
-                <form action="/control" method="get"><button type="button submit" name="power" value="%SET-POWER-VALUE%" class="btn">%SET-POWER-STRING%</button></form>
+        <div class="buttons-container" id="js-disabled-buttons">
+            <div id="power-button-container">
+                <form action="%GENERAL-CONTROL-URL%" method="post">
+                    <button type="submit" name="power" value="%SET-POWER-VALUE%" class="btn">%SET-POWER-STRING%</button>
+                </form>
             </div>
-            <div id="modebutton-container">
-                <form action="/control" method="get"><button type="button submit" name="changeMode" value="1" class="btn">Change Mode</button></form>
+            <div id="mode-button-container">
+                <form action="%GENERAL-CONTROL-URL%" method="post">
+                    <button type="submit" name="change-mode" value="1" class="btn">Change Mode</button>
+                </form>
             </div>
         </div>
     </div>
