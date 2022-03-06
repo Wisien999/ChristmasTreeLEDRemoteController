@@ -47,6 +47,30 @@ String processor(const String &var) {
 }
 
 
+void setEndpoints() {
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(LittleFS, "/index.html", "text/html", false, processor);
+    });
+    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(LittleFS, "/style.css", "text/css");
+    });
+    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(LittleFS, "/script.js", "application/javascript");
+    });
+    server.on(WIFI_CREDENTIALS_PAGE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(LittleFS, "/wifi-credentials.html", "text/html", false, processor);
+    });
+
+    server.on(GENERAL_CONTROL_URL, HTTP_ANY, RESTHandlers::handleControl);
+    server.on(POWER_STATE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain",
+                      Controller::isPoweredOn() ? GET_POWER_ON_RESPONSE : GET_POWER_OFF_RESPONSE);
+    });
+    server.on(POWER_STATE_URL, HTTP_POST, RESTHandlers::handleSetPowerState);
+    server.on(CHANGE_MODE_URL, HTTP_ANY, RESTHandlers::handleChangeMode);
+    server.on(WIFI_CREDENTIALS_CONTROL_URL, HTTP_POST, RESTHandlers::handleSetWifiCredentials);
+}
+
 
 [[maybe_unused]] void setup() {
     Serial.begin(9600);
@@ -67,33 +91,11 @@ String processor(const String &var) {
 
     WiFiController::setUpConnection();
 
-
     // Set endpoints
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/index.html", "text/html", false, processor);
-    });
-    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/style.css", "text/css");
-    });
-    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/script.js", "application/javascript");
-    });
-    server.on(WIFI_CREDENTIALS_PAGE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/wifi-credentials.html", "text/html", false, processor);
-    });
-
-    server.on(GENERAL_CONTROL_URL, HTTP_ANY, RESTHandlers::handleControl);
-    server.on(POWER_STATE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
-            request->send(200, "text/plain",
-                          Controller::isPoweredOn() ? GET_POWER_ON_RESPONSE : GET_POWER_OFF_RESPONSE);
-    });
-    server.on(POWER_STATE_URL, HTTP_POST, RESTHandlers::handleSetPowerState);
-    server.on(CHANGE_MODE_URL, HTTP_ANY, RESTHandlers::handleChangeMode);
-    server.on(WIFI_CREDENTIALS_CONTROL_URL, HTTP_POST, RESTHandlers::handleSetWifiCredentials);
+    setEndpoints();
 
     // start the web server
     server.begin();
-
 
     delay(10);
     Serial.println(WiFi.localIP());
