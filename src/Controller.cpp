@@ -4,14 +4,14 @@
 bool Controller::_poweredOn = false;
 
 void Controller::powerOff() {
-    digitalWrite(RELAY_PIN, POWER_OFF);
-    digitalWrite(LED_BUILTIN, POWER_OFF);
+    digitalWrite(POWER_RELAY_PIN, POWER_OFF);
+    digitalWrite(LED_BUILTIN, HIGH);
     _poweredOn = false;
 }
 
 void Controller::powerOn() {
-    digitalWrite(RELAY_PIN, POWER_ON);
-    digitalWrite(LED_BUILTIN, POWER_ON);
+    digitalWrite(POWER_RELAY_PIN, POWER_ON);
+    digitalWrite(LED_BUILTIN, LOW);
     _poweredOn = true;
 }
 
@@ -22,9 +22,10 @@ void Controller::powerOnOff(const String& targetState) {
 
 
 void Controller::changeMode() {
-    digitalWrite(SWITCH_BUTTON_PIN, HIGH);
-    delay(100);
-    digitalWrite(SWITCH_BUTTON_PIN, LOW);
+    digitalWrite(BUTTON_RELAY_PIN, HIGH);
+    auto startTime = millis();
+    while (millis() - startTime < 100) Serial.println("changing mode");
+    digitalWrite(BUTTON_RELAY_PIN, LOW);
 }
 
 bool Controller::isPoweredOn() {

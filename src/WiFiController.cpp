@@ -4,6 +4,7 @@
 
 #include "constants.h"
 #include "WiFiController.h"
+#include "config.h"
 
 
 void WiFiController::getWiFiSSIDFromEEPROM(char *ssid) {
@@ -79,6 +80,6 @@ void WiFiController::setUpConnection() {
     if (!WiFiController::tryToConnectToWiFi()) {
         delay(100);
         WiFi.mode(WIFI_AP);
-        WiFi.softAP("Christmas Tree LED Controller");
+        WiFi.softAP(OWN_WIFI_SSID, OWN_WIFI_PASSWORD);
     }
 }

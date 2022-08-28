@@ -1,3 +1,13 @@
+body {
+    font-size: 24px;
+}
+
+.main-container {
+    min-width: 200px;
+    max-width: 600px;
+    width: 50vw;
+}
+
 .center {
     position: absolute;
     left: 50%;
@@ -5,7 +15,11 @@
     transform: translate(-50%, -50%);
 }
 
-.btn {
+button {
+    font-size: 14px;
+}
+
+.input {
     min-height: 20px;
     padding: 8px 12px;
     margin-bottom: 10px;
@@ -20,4 +34,19 @@
 
 #power-status {
     font-weight: bold;
+}
+
+#wifi-settings-btn {
+    max-width: 150px;
+    min-width: 80px;
+    width: 17vw;
+    height: 40pt;
+    position: fixed;
+    right: 20px;
+    top: 20px;
+
+}
+
+#wifi-credentials {
+    font-size: 14px;
 }

@@ -4,7 +4,7 @@
 #include "Controller.h"
 #include "WiFiController.h"
 
-void RESTHandlers::handleControl(AsyncWebServerRequest *request) {
+void RESTHandlers::handleBrowserControl(AsyncWebServerRequest *request) {
     if (request->hasArg(CONTROL_POWER_STATE_ARG_NAME))
     {
         String val = request->arg(CONTROL_POWER_STATE_ARG_NAME);
@@ -15,7 +15,7 @@ void RESTHandlers::handleControl(AsyncWebServerRequest *request) {
         Controller::changeMode();
     }
 
-    request->send(200);
+    request->redirect("/");
 }
 
 void RESTHandlers::handleSetPowerState(AsyncWebServerRequest *request) {

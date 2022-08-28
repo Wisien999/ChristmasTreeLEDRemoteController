@@ -24,8 +24,8 @@ String processor(const String &var) {
     else if (var == TURN_OFF_ON_BUTTON_TEXT_VAR_NAME) {
         return Controller::isPoweredOn() ? String("Turn off") : String("Turn on");
     }
-    else if (var == CONTROL_URL_VAR_NAME) {
-        return {GENERAL_CONTROL_URL};
+    else if (var == BROWSER_CONTROL_URL_VAR_NAME) {
+        return {BROWSER_CONTROL_URL};
     }
     else if (var == WIFI_CREDENTIALS_CONTROL_URL_VAR_NAME) {
         return {WIFI_CREDENTIALS_CONTROL_URL};
@@ -42,6 +42,9 @@ String processor(const String &var) {
     else if (var == WIFI_PASSWORD_ARG_VAR_NAME ) {
         return {CONTROL_WIFI_PASSWORD_ARG_NAME};
     }
+    else if (var == WIFI_CREDENTIALS_PAGE_URL_VAR_NAME) {
+        return {WIFI_CREDENTIALS_PAGE_URL};
+    }
 
     return {};
 }
@@ -54,14 +57,11 @@ void setEndpoints() {
     server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/style.css", "text/css");
     });
-    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/script.js", "application/javascript");
-    });
     server.on(WIFI_CREDENTIALS_PAGE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/wifi-credentials.html", "text/html", false, processor);
     });
 
-    server.on(GENERAL_CONTROL_URL, HTTP_ANY, RESTHandlers::handleControl);
+    server.on(BROWSER_CONTROL_URL, HTTP_ANY, RESTHandlers::handleBrowserControl);
     server.on(POWER_STATE_URL, HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/plain",
                       Controller::isPoweredOn() ? GET_POWER_ON_RESPONSE : GET_POWER_OFF_RESPONSE);
@@ -82,8 +82,8 @@ void setEndpoints() {
         return;
     }
 
-    pinMode(RELAY_PIN, OUTPUT);
-    pinMode(SWITCH_BUTTON_PIN, OUTPUT);
+    pinMode(POWER_RELAY_PIN, OUTPUT);
+    pinMode(BUTTON_RELAY_PIN, OUTPUT);
     pinMode(LED_BUILTIN, OUTPUT);
 
     // ensure the power is off by default

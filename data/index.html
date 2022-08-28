@@ -3,28 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="60">
     <link rel="stylesheet" href="style.css">
 
-    <title>Christmas Tree LED controller</title>
+    <title>Christmas Tree LED Controller</title>
 
 </head>
 <body>
-    <div class="center">
+    <div class="center main-container">
         <div id="status-container">
             <div id="power-status-container"><span>Power is </span><span id="power-status">%POWER-STATE%</span></div> 
         </div>
         <div class="buttons-container" id="buttons-container">
             <div id="power-button-container">
-                <form action="%GENERAL-CONTROL-URL%" method="post">
-                    <button type="submit" name="%SET-POWER-STATE-ARG-NAME%" value="%SET-POWER-VALUE%" class="btn">%SET-POWER-STRING%</button>
+                <form action="%BROWSER-CONTROL-URL%" method="post">
+                    <button type="submit" name="%SET-POWER-STATE-ARG-NAME%" value="%SET-POWER-VALUE%" class="input">%SET-POWER-STRING%</button>
                 </form>
             </div>
             <div id="mode-button-container">
-                <form action="%GENERAL-CONTROL-URL%" method="post">
-                    <button type="submit" name="%CHANGE-MODE-ARG-NAME%" value="1" class="btn">Change Mode</button>
+                <form action="%BROWSER-CONTROL-URL%" method="post">
+                    <button type="submit" name="%CHANGE-MODE-ARG-NAME%" value="1" class="input">Change Mode</button>
                 </form>
             </div>
         </div>
+    </div>
+    <div id="wifi-settings-button-container">
+        <a href="%WIFI-SETTINGS%">
+            <button class="input" id="wifi-settings-btn">WiFi Settings</button>
+        </a>
     </div>
 </body>
 </html>

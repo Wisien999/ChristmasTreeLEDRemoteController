@@ -4,7 +4,7 @@
 #include "ESPAsyncWebServer.h"
 
 namespace RESTHandlers {
-    void handleControl(AsyncWebServerRequest *request);
+    void handleBrowserControl(AsyncWebServerRequest *request);
     void handleSetPowerState(AsyncWebServerRequest *request);
     void handleChangeMode(AsyncWebServerRequest *request);
     void handleSetWifiCredentials(AsyncWebServerRequest *request);
